@@ -1,0 +1,42 @@
+mini_sim/
+│
+├── pyproject.toml
+│
+├── src/
+│   └── mini_sim/
+│       │
+│       ├── __init__.py
+│       │
+│       ├── model/
+│       │   ├── __init__.py
+│       │   ├── block.py
+│       │   ├── port.py
+│       │   ├── connection.py
+│       │   └── diagram.py
+│       │
+│       ├── blocks/
+│       │   ├── __init__.py
+│       │   ├── gain.py
+│       │   ├── summer.py
+│       │   ├── constant.py
+│       │   ├── integrator.py
+│       │   └── scope.py
+│       │
+│       ├── simulation/
+│       │   ├── __init__.py
+│       │   ├── compiler.py
+│       │   ├── engine.py
+│       │   └── results.py
+│       │
+│       └── gui/
+│           ├── __init__.py
+│           ├── main_window.py
+│           ├── scene.py
+│           ├── block_item.py
+│           ├── port_item.py
+│           └── connection_item.py
+│
+└── tests/
+    ├── test_connections.py
+    ├── test_blocks.py
+    └── test_simulation.py
