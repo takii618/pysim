@@ -1,5 +1,7 @@
 from __future__ import annotations
 from enum import Enum
+import numpy as np
+
 
 class Direction(Enum):
     INPUT = "input"
@@ -64,6 +66,11 @@ class Connection:
         )
 
 class Diagram:
+    """class Diagram with two attributes a list of blocks and list of connections,
+    you can add blocks with:
+        diagram.add_block
+        or diagram.add_blocks"""
+
     def __init__(self):
         self.blocks = []
         self.connections = []
@@ -78,7 +85,14 @@ class Diagram:
         for block in blocks:
             self.add_block(block)
 
-    def connect(self, src: Port, dest: Port) -> Connection:
+    def connect(self, src: Port | Block, dest: Port | Block) -> Connection:
+        """ method of the class Diagram, use it to connect ports, inputs -> outputs        or you can give it blocks if the connecting is non ambiguous, improvements
+        needed"""
+
+        if isinstance(src, Block):
+            src = resolve_port(src, Direction.OUTPUT)
+        if isinstance(dest, Block):
+            dest = resolve_port(dest, Direction.INPUT)
 
         if src.owner not in self.blocks:
             raise ValueError("Source block not in diagram")
@@ -104,4 +118,78 @@ class Diagram:
         connection = Connection(src, dest)
         self.connections.append(connection)
         return connection
+    
+    def execution_order(self):
+        adjacency = {block: set() for block in self.blocks}
+        indegree = {block: 0 for block in self.blocks}
 
+        for c in self.connections:
+            src = c.source.owner
+            dst = c.destination.owner
+
+            if dst not in adjacency[src]:
+                adjacency[src].add(dst)
+                indegree[dst] += 1
+
+        queue = [
+            block for block in self.blocks
+            if indegree[block] == 0
+        ]
+
+        order = []
+
+        while queue:
+            block = queue.pop(0)
+            order.append(block)
+
+            for neighbor in adjacency[block]:
+                indegree[neighbor] -= 1
+
+                if indegree[neighbor] == 0:
+                    queue.append(neighbor)
+
+        if len(order) != len(self.blocks):
+            raise ValueError("Cycle detected in diagram")
+
+        return order
+
+    def evaluate(self):
+
+        incoming = {
+                c.destination : c
+                for c in self.connections
+                }
+        values = {}
+        results = {}
+
+        for block in self.execution_order():
+
+            inputs = {}
+
+            for name, port in block.inputs.items():
+                connection = incoming.get(port)
+
+                if connection is None:
+                    raise ValueError(
+                        f"Unconnected input: {block.name}.{name}"
+                    )
+
+                inputs[name] = values[connection.source]
+
+            outputs = block.evaluate(inputs)
+
+            for name, value in outputs.items():
+                values[block.outputs[name]] = value
+
+            results[block.name] = outputs
+
+        return results
+
+
+def resolve_port(block : Block, direction : Direction):
+    ports = block.inputs if direction == Direction.INPUT else block.outputs
+    if len(ports) <1:
+        raise ValueError(f"the block {block} has no {direction} ports")
+    if len(ports) > 1:
+        raise ValueError(f"the block {block} has multiple ({len(ports)}){direction} ports")
+    return next(iter(ports.values()))

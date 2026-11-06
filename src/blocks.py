@@ -10,8 +10,8 @@ class Gain(Block):
         self.add_input("u")
         self.add_output("y")
 
-    def evaluate(self, u: float) -> float:
-        return self.k * u
+    def evaluate(self, inputs: dict) -> dict:
+        return {"y" : self.k * inputs["u"]}
 
     def __repr__(self) -> str:
         return f"Gain(name={self.name!r}, k={self.k})"
@@ -23,8 +23,8 @@ class Constant(Block):
         self.value = value
         self.add_output("y")
 
-    def evaluate(self) -> float:
-        return self.value
+    def evaluate(self, inputs: dict) -> dict:
+        return {"y" : self.value}
 
     def __repr__(self) -> str:
         return f"Constant(name={self.name!r}, value={self.value})"
@@ -38,13 +38,13 @@ class Summer(Block):
 
         for i in range(n_inputs):
             self.add_input(f"u{i}")
-            self.add_output("y")
+        self.add_output("y")
 
-    def evaluate(self, *inputs: float) -> float:
 
+    def evaluate(self, inputs: dict) -> dict:
         if len(inputs) != self.n_inputs:
             raise ValueError("Incorrect number of inputs")
-        return sum(inputs)
+        return {"y" : sum(inputs.values())}
 
     def __repr__(self) -> str:
         return f"Summer(name={self.name!r}, n_inputs={self.n_inputs})"
@@ -57,13 +57,17 @@ class Scope(Block):
         self.time: list[float] = []
         self.values: list[float] = []
 
-    def record(self, t:float, u:float) -> None:
-        self.time.append(t)
-        self.values.append(u)
+    def evaluate(self, inputs):
+        self.value = inputs["u"]
+        return {}
 
-    def clear(self) -> None:
-        self.time.clear()
-        self.values.clear()
+    # def record(self, t:float, u:float) -> None:
+    #     self.time.append(t)
+    #     self.values.append(u)
+    #
+    # def clear(self) -> None:
+    #     self.time.clear()
+    #     self.values.clear()
 
     def __repr__(self) -> str:
         return f"Scope(name={self.name!r}, samples={len(self.time)})"

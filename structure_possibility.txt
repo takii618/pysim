@@ -1,4 +1,4 @@
-mini_sim/
+pysim/
 │
 ├── pyproject.toml
 │
